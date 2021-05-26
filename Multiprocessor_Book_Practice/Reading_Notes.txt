@@ -1,0 +1,85 @@
+Book -- The Art of Multiprocessor Programming, Revised Reprint
+Temp library link: https://illiad.davidson.edu/pdf/399175.pdf
+
+Notes and Questions
+
+Up to 2.0-2
+All about time -- instintaneous means occur at single instant of time. Convenient to require that events are never simultaneous
+ (but that does seems to be practically true? Says if the same, can be either order, but RS gates show that which event happens first
+can matter a lot).
+Critical section -- block of code that can be executed by only one thread at a time (property of mutual exclusion)
+Thread well formed if:
+1. each critical section is associated with unique lock object
+2. the thread calls that object's lock method when it is trying to enter critical section
+3. thread calls unlock method when it leaves critical section
+Some properties good Lock algorithm should solve:
+Mutual exclution -- critical sections of different threads do not overlap
+Freedom from deadlock -- if some thread attempts to acquire lock, then some thread will succeed (ie if A calls lock, 
+but never acquires it, the other thread must be completing infinite number of critical sections)
+Freedom for starvation -- least compelling. Every thread that attempts to acquire lock eventuals succeeds
+
+3.8 
+There's a problem in java of an immutable element being created, but the creation of
+objects is not atomic, so calling on a half-finished object may offer
+problematic results. Is there a way to guarantee certain critical methods (like the 
+creation of an object or struct) are atomic? 
+
+Volatile field -- Does Rust has the same issues of local copies vs shared
+memory between threads? I don't think so, because variable ownership is so
+explicit. However, clones. 
+What exactly happens when I write:
+inside_variable = Arc::clone(&outside_variable); 
+Am I creating something like a local variable that acts like a working variable from a volatile
+field? Does the value of inside_variable automaticaly write to outside_variable? 
+It seemed to in my thread program. 
+This seems like it might have lag problems, or issues around
+multiple threads trying to write different information to the shared memory
+at the same time. Are there ways to manage that in Rust? What are the rules?
+
+Vocab: "linearizable" -- a correctness condition for concurrent objects that
+exploits the semantics of abstract data types. It permits a high degree of concurrency, yet it permits
+programmers to specify and reason about concurrent objects using know techniques from the sequential domain
+???? What does that mean?
+A method is linearizable if it has a point where it seems to 'take effect' instantaneously from the point of view
+of other threads. 
+If we say our concurrent program is linearizable, it has the property of linearizability. It means everytime we run it,
+the history is linearizable (the history is what we expect). 
+
+Sequential consistency -- in sequential consistency events are only related by program order, ie, two events that happen in 
+different threads are not related. In linearizability we also required that each method call takes effect at some point between the 
+method invocation and its response. To prove, must look for total order of the recorded events which satisfies our sequential specifications
+of the objects. So, since Java memory model allows steps of a program to occur out of order, this is not guranteed.
+
+Fundamental Property of relaxed memory models: if a program's sequentially consisten executions follow certain rules,
+then every execution of that program in the relaxed model with still be sequentially consistent. Complete set of rules is 
+large and complex. 
+
+9.1-4, Linked Lists and Locking
+Scalable concurrent data structures
+Coarse grained synchronization -- take a sequential implementation of the class, add a scalable lock field, and ensure
+each method call acquires and releases that lock (uses a single lock to mediate all its method calls, may cause sequential bottleneck)
+Fine grained synchronization -- split object into independently synchronized components, ensuring method calls interfere only when trying
+to access the same componenent at the same time
+Optimistic synchronization -- search without locking. If found, locks component and checks has not changes between inspection and lock
+Lazy synchronization -- postpone hard work. Ex. mark a component to be removed, but don't physically unlink until later
+Nonblocking synchronization -- eliminating locks, rely on built-in atomic operations
+
+Set, every element unique -- 3 methods
+    add -- adds, returning iff x was not already there
+    remove -- removes, returing true iff x was there
+    contains -- returns true iff set contains x
+
+invariants -- properties that always hold
+    1. property holds when object is created
+    2. once property holds, no thread can take a step that makes the property false
+
+
+
+
+
+
+
+
+
+
+
