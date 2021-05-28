@@ -1,13 +1,12 @@
 //implementation of a set of non-negative numbers
-
 use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
 
-
 const THREAD_NUM: u32 = 16;
 
 fn main() {
+    use lib::PosIntSet;
     let stopper = Arc::new(Mutex::new(0));
     let mut handles = vec![];
 
