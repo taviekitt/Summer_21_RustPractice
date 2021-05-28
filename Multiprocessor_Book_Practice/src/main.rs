@@ -26,9 +26,11 @@ fn main() {
         let shared_set = PosIntSet::new();
         let general_handle = thread::spawn(move || {
             while *stopper.lock().unwrap() == 0 {
-                //
+                //add, remove, search method testers
+                PosIntSet::add(shared_set, 35);
+                PosIntSet::add(shared_set, 13);
+                PosIntSet::add(shared_set, 468);
             }
-    
         });
         handles.push(general_handle);
     }
