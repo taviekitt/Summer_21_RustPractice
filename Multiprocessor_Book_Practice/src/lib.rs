@@ -70,12 +70,12 @@ impl PosIntSet {
         }
         if key == current_key {
             return false;
-        } else {
-            let new_node: Node = match curr {
+        }
+        let new_node: Node = match curr {
             Some(current) => Node::new(value, Some(current.clone())),
             None => println!("well this is an odd late problem.")
         };
-        prev.next = Some(Box::new(new_node)); //very difficult line, maybe use unsafe
+        prev.next = new_node; //difficult line, maybe use unsafe
         return true;
     } 
 }
