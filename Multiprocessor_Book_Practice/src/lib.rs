@@ -14,7 +14,7 @@ fn hash_function(value: &i32) -> i32{ //placeholder hash function
 struct Node {
     value: i32,
     key: i32,
-    next: Option<Arc<Node>>
+    next: Option<Arc<Node>> //replace with raw pointer? but then loses atomic?
 }
 
 impl Node{
@@ -76,10 +76,20 @@ impl PosIntSet {
             Some(current) => Node::new(value, Some(current.clone())),
             None => println!("well this is an odd late problem.")
         };
-        prev.next = new_node; //difficult line, maybe use unsafe
+        unsafe { //loses the multi-threaded ability of arcs -- this seems like a terrible implementation of anything
+            //Do I need arcs to guarantee no-race cond if whole list locks? Or just for lifetimes stuff
+            let raw_prev_pointer: *mut Node = prev.as_ref().map(|prev| &prev);
+            let raw_new_pointer: *mut Node = &new_node;
+            *(raw_prev_pointer).next = raw_new_pointer; //difficult line, maybe use unsafe
+            //do I have to make every next field a raw pointer? lots of unsafe code
+        }
         return true;
     } 
 }
 
+//main lesson? Prob should implement a linked-list which can be modified in the middle when 
+//working over multiple threads
+
+//Idea -- write an iterator (or multiple) so that searching is easier and seperates add/remove func
 
 
