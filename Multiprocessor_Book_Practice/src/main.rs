@@ -16,7 +16,7 @@ fn main() {
     println!("Set after: ");
     LinkedList::print(&first_list);
 
-    println!("> {:?}", first_list.get_head().next());
+    //println!("> {:?}", first_list.get_head().next());
 }
 
 

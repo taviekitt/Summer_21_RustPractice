@@ -47,14 +47,14 @@ pub struct LinkedList {
     lock: Mutex<i32>
 }
 
-impl Iterator for Node { //Option<Rc<RefCell<Node>>> //get next from node
-    type Item = Node; //get_next takes Node and returns ValidLink
-    fn next(&mut self) -> Option<Self::Item> {
-        let next_rc: Rc<RefCell<Node>> = self.next.as_ref().unwrap().clone();
-        let nextNode: Node = (*next_rc).borrow(); //prob - ref wraps borrowed reference to RefCell
-        Some(nextNode)
-    }
-}
+//impl Iterator for Node { //Option<Rc<RefCell<Node>>> //get next from node
+ //   type Item = Node; //get_next takes Node and returns ValidLink
+ //   fn next(&mut self) -> Option<Self::Item> {
+ //       let next_rc: Rc<RefCell<Node>> = self.next.as_ref().unwrap().clone();
+  //      let nextNode: Node = (*next_rc).borrow(); //prob - ref wraps borrowed reference to RefCell
+  //      Some(nextNode)
+  //  }
+//}
 
 impl LinkedList {
     pub fn new() -> Self {
