@@ -65,13 +65,13 @@ impl LinkedList {
         }
     }
 
-    pub fn get_head(&mut self) -> ValidLink {
-        let head: ValidLink = match &self.head {
-            Some(reference) => reference.clone(),
-            None => panic!("Nothing left to remove"),
-        };
-        head
-    }
+   // pub fn get_head(&mut self) -> ValidLink {
+   //     let head: ValidLink = match &self.head {
+   //         Some(reference) => reference.clone(),
+    //        None => panic!("Nothing left to remove"),
+   //     };
+   //     head
+   // }
 
     pub fn push(&mut self, value: i32) -> bool {
         let _locked_set = self.lock.lock(); 
