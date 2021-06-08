@@ -20,7 +20,7 @@ fn hash_function(value: &i32) -> i32{
 struct Node {
     value: i32,
     key: i32,
-    next: Link,
+    next: Link
 }
 
 impl Node {
@@ -30,8 +30,8 @@ impl Node {
             None => panic!("There is no next."),
         }
     }
-    pub fn new(value: i32, next: Link) -> Node {
-        if value < SET_MIN || value > SET_MAX {
+    pub fn new(value: i32, next: Link) -> Self {
+        if (value < SET_MIN) | (value > SET_MAX) {
             panic!("value is out of range");
         }
         Self {
@@ -57,7 +57,8 @@ impl LinkedList {
     }
 
     pub fn add(&mut self, value: i32) -> bool {
-        self.lock.lock(); //unnecessary as this is a single-threaded program
+        let _locked_set = self.lock.lock(); 
+        //unnecessary as this is a single-threaded program
         let key = hash_function(&value);
 
         //head is prev
@@ -65,22 +66,31 @@ impl LinkedList {
             Some(reference) => reference.clone(),
             None => return false,
         };
+
         let curr: ValidLink = prev.borrow().get_next();  //first element is curr
+
+        //let new_node = Some(Rc::new(RefCell::new(Node {
+        //    key: key,
+         //   value: value,
+        //    next: Some(Rc::clone(&curr)),
+        //})));
+
         let next_link: ValidLink = Rc::new(RefCell::new(Node::new(value, Some(Rc::clone(&curr)))));
-        curr.borrow_mut().next = Some(next_link); //reset head
+        prev.borrow_mut().next = Some(next_link); //reset head
         true
     }
 
-
     pub fn print(&self) {
-        println!("Linked List is: ");
         self.print_rec(&self.head);
     }
 
     fn print_rec(&self, link: &Link) {
         if link.is_some() {
-            println!("{} ", link.as_ref().unwrap().borrow().key);
-            self.print_rec(&link.as_ref().unwrap().borrow().next); //prints last element infinite times. Why?
+            let to_print = link.as_ref().unwrap().borrow().key;
+            if (to_print > SET_MIN) && (to_print < SET_MAX) { //don't print head or tail
+                println!("{}", to_print);
+            }
+            self.print_rec(&link.as_ref().unwrap().borrow().next);
         }
     }
 }
