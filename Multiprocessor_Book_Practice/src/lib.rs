@@ -47,6 +47,15 @@ pub struct LinkedList {
     lock: Mutex<i32>
 }
 
+impl Iterator for Node { //Option<Rc<RefCell<Node>>> //get next from node
+    type Item = Node; //get_next takes Node and returns ValidLink
+    fn next(&mut self) -> Option<Self::Item> {
+        let next_rc: Rc<RefCell<Node>> = self.next.as_ref().unwrap().clone();
+        let nextNode: Node = (*next_rc).borrow(); //prob - ref wraps borrowed reference to RefCell
+        Some(nextNode)
+    }
+}
+
 impl LinkedList {
     pub fn new() -> Self {
         let tail = Rc::new(RefCell::new(Node::new(SET_MAX, None)));
@@ -56,10 +65,17 @@ impl LinkedList {
         }
     }
 
-    pub fn add(&mut self, value: i32) -> bool {
+    pub fn get_head(&mut self) -> ValidLink {
+        let head: ValidLink = match &self.head {
+            Some(reference) => reference.clone(),
+            None => panic!("Nothing left to remove"),
+        };
+        head
+    }
+
+    pub fn push(&mut self, value: i32) -> bool {
         let _locked_set = self.lock.lock(); 
         //unnecessary as this is a single-threaded program
-        let key = hash_function(&value);
 
         //head is prev
         let prev: ValidLink = match &self.head {
@@ -68,16 +84,30 @@ impl LinkedList {
         };
 
         let curr: ValidLink = prev.borrow().get_next();  //first element is curr
-
-        //let new_node = Some(Rc::new(RefCell::new(Node {
-        //    key: key,
-         //   value: value,
-        //    next: Some(Rc::clone(&curr)),
-        //})));
-
         let next_link: ValidLink = Rc::new(RefCell::new(Node::new(value, Some(Rc::clone(&curr)))));
         prev.borrow_mut().next = Some(next_link); //reset head
         true
+    }
+
+    pub fn pop(&mut self) -> i32 {
+        let _locked_set = self.lock.lock();
+
+        //head is prev
+        let prev: ValidLink = match &self.head {
+            Some(reference) => reference.clone(),
+            None => panic!("Nothing left to remove"),
+        };
+
+        //first element (to be removed) is curr
+        let curr: ValidLink = prev.borrow().get_next();
+        //next is curr.next
+        let next: ValidLink = curr.borrow().get_next();
+        //head points to next
+        prev.borrow_mut().next = Some(next);
+        //curr points to None
+        let popped_value = curr.borrow().value;
+        curr.borrow_mut().next = None;
+        popped_value
     }
 
     pub fn print(&self) {
