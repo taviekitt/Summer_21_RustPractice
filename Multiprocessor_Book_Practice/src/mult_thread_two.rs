@@ -1,15 +1,13 @@
-//implementation of single thread linked list of integers
-pub mod mult_thread_two;
+//lock links
+//mutex interior mutability
+//https://doc.rust-lang.org/book/ch16-03-shared-state.html#similarities-between-refcelltrct-and-mutextarct
 
-
-use std::sync::Mutex;
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Mutex, Arc};
 
 const SET_MIN: i32 = std::i32::MIN;
 const SET_MAX: i32 = std::i32::MAX;
 
-type ValidLink = Rc<RefCell<Node>>;
+type ValidLink = Arc<Mutex<Node>>;
 type Link = Option<ValidLink>;
 
 fn hash_function(value: &i32) -> i32{
@@ -24,7 +22,7 @@ pub struct Node {
 }
 
 pub fn get_next_link(link: Link) -> Link {
-    match &link.unwrap().clone().borrow().next {
+    match &link.unwrap().lock().unwrap().next {
         Some(reference) => Some(reference.clone()),
         None => None,
     }
@@ -72,17 +70,17 @@ impl Iterator for LinkedList {
 
 impl LinkedList {
     pub fn new() -> Self {
-        let tail = Rc::new(RefCell::new(Node::new(SET_MAX, None)));
-        let head = Some(Rc::new(RefCell::new(Node::new(SET_MIN, Some(tail)))));
+        let tail = Arc::new(Mutex::new(Node::new(SET_MAX, None)));
+        let head = Some(Arc::new(Mutex::new(Node::new(SET_MIN, Some(tail)))));
         Self {
             current: head.clone(),
             head: head,
-            lock: Mutex::new(0),
+            lock: Mutex::new(0), //can remove later?
         }
     }
 
     pub fn add(&mut self, value: i32) -> bool {
-        let _locked_set = self.lock.lock();
+        let _locked_set = self.lock.lock(); //remove?
         let key = hash_function(&value);
 
         let mut prev: ValidLink = match &self.head { //head is prev
@@ -90,20 +88,20 @@ impl LinkedList {
             None => return false,
         };
 
-        let mut curr: ValidLink = prev.borrow().get_next(); //first element is curr
+        let mut curr: ValidLink = prev.lock().unwrap().get_next(); //first element is curr
 
-        while curr.borrow().value < key { 
-            let next = curr.borrow().get_next();
+        while curr.lock().unwrap().value < key { 
+            let next = curr.lock().unwrap().get_next();
             prev = curr;
             curr = next;
         }
 
-        if curr.borrow().key == key { //curr.key == key
+        if curr.lock().unwrap().key == key { //curr.key == key
             return false
         }
         else { //curr.key > key
-            let next_link: ValidLink = Rc::new(RefCell::new(Node::new(value, Some(Rc::clone(&curr)))));
-            prev.borrow_mut().next = Some(next_link); //reset prev
+            let next_link: ValidLink = Arc::new(Mutex::new(Node::new(value, Some(Arc::clone(&curr)))));
+            prev.lock().unwrap().next = Some(next_link); //reset prev
         }
         true
     }
@@ -117,11 +115,11 @@ impl LinkedList {
             None => panic!("Nothing left to remove"),
         };
 
-        let curr: ValidLink = prev.borrow().get_next();
-        let next: ValidLink = curr.borrow().get_next();
-        prev.borrow_mut().next = Some(next);
-        let popped_value = curr.borrow().value;
-        curr.borrow_mut().next = None;
+        let curr: ValidLink = prev.lock().unwrap().get_next();
+        let next: ValidLink = curr.lock().unwrap().get_next();
+        prev.lock().unwrap().next = Some(next);
+        let popped_value = curr.lock().unwrap().value;
+        curr.lock().unwrap().next = None;
         popped_value
     }
 
@@ -135,18 +133,18 @@ impl LinkedList {
             None => panic!("No head in list"),
         };
 
-        let mut curr: ValidLink = prev.borrow().get_next();
+        let mut curr: ValidLink = prev.lock().unwrap().get_next();
 
-        while curr.borrow().key < key {
-            let next = curr.borrow().get_next();
+        while curr.lock().unwrap().key < key {
+            let next = curr.lock().unwrap().get_next();
             prev = curr;
             curr = next;
         }
 
-        if curr.borrow().key == key { //if there, remove
-            let next = curr.borrow().get_next();
-            prev.borrow_mut().next = Some(next);
-            curr.borrow_mut().next = None;
+        if curr.lock().unwrap().key == key { //if there, remove
+            let next = curr.lock().unwrap().get_next();
+            prev.lock().unwrap().next = Some(next);
+            curr.lock().unwrap().next = None;
             return true;
         } 
         false
@@ -158,22 +156,22 @@ impl LinkedList {
 
     fn print_rec(&self, link: &Link) {
         if link.is_some() {
-            let to_print = link.as_ref().unwrap().borrow().value;
+            let to_print = link.as_ref().unwrap().lock().unwrap().value;
             if (to_print > SET_MIN) && (to_print < SET_MAX) { //don't print head or tail
                 println!("{}", to_print);
             }
-            self.print_rec(&link.as_ref().unwrap().borrow().next);
+            self.print_rec(&link.as_ref().unwrap().lock().unwrap().next);
         }
     }
 
     pub fn print_iter(&self) {
         let mut link = self.head.clone();
         while link.is_some() {
-            let to_print = link.as_ref().unwrap().borrow().value;
+            let to_print = link.as_ref().unwrap().lock().unwrap().value;
             if (to_print > SET_MIN) && (to_print < SET_MAX) { //don't print head or tail
                 println!("{}", to_print);
             }
-            let temp_link = link.as_ref().unwrap().borrow().next.clone();
+            let temp_link = link.as_ref().unwrap().lock().unwrap().next.clone();
             link = temp_link;
         }
     }
