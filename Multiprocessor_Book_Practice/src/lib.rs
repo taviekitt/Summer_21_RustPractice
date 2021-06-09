@@ -23,6 +23,13 @@ struct Node {
     next: Link
 }
 
+pub fn get_next_link(link: Link) -> Link {
+    match &link.unwrap().clone().borrow().next {
+        Some(reference) => Some(reference.clone()),
+        None => None,
+    }
+}
+
 impl Node {
     pub fn get_next(&self) -> ValidLink {
         match &self.next {
@@ -40,21 +47,29 @@ impl Node {
             next: next,
         }
     }
+
 }
 
 pub struct LinkedList {
     head: Link,
+    current: Link,
     lock: Mutex<i32>
 }
 
-//impl Iterator for Node { //Option<Rc<RefCell<Node>>> //get next from node
- //   type Item = Node; //get_next takes Node and returns ValidLink
- //   fn next(&mut self) -> Option<Self::Item> {
- //       let next_rc: Rc<RefCell<Node>> = self.next.as_ref().unwrap().clone();
-  //      let nextNode: Node = (*next_rc).borrow(); //prob - ref wraps borrowed reference to RefCell
-  //      Some(nextNode)
-  //  }
-//}
+impl Iterator for LinkedList {
+    type Item = Link;
+    fn next(& mut self) -> Option<Self::Item> {
+        let curr = match self.current {
+            Some(pointer) => {
+                let next = get_next_link(Some(pointer.clone()));
+                self.current = next;
+                next
+            }
+            None => None,
+        };
+        Some(curr)
+    }
+}
 
 impl LinkedList {
     pub fn new() -> Self {
@@ -123,6 +138,8 @@ impl LinkedList {
             self.print_rec(&link.as_ref().unwrap().borrow().next);
         }
     }
+
+    //print iterative
 }
 
 
