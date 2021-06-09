@@ -47,7 +47,6 @@ impl Node {
             next: next,
         }
     }
-
 }
 
 pub struct LinkedList {
@@ -80,17 +79,8 @@ impl LinkedList {
         }
     }
 
-   // pub fn get_head(&mut self) -> ValidLink {
-   //     let head: ValidLink = match &self.head {
-   //         Some(reference) => reference.clone(),
-    //        None => panic!("Nothing left to remove"),
-   //     };
-   //     head
-   // }
-
     pub fn push(&mut self, value: i32) -> bool {
         let _locked_set = self.lock.lock(); 
-        //unnecessary as this is a single-threaded program
 
         //head is prev
         let prev: ValidLink = match &self.head {
@@ -104,6 +94,33 @@ impl LinkedList {
         true
     }
 
+    pub fn add(&mut self, value: i32) -> bool {
+        let _locked_set = self.lock.lock();
+        let key = hash_function(&value);
+
+        let prev: ValidLink = match &self.head { //head is prev
+            Some(reference) => reference.clone(),
+            None => return false,
+        };
+
+        let curr: ValidLink = prev.borrow().get_next(); //first element is curr
+
+        while curr.borrow().value < key { 
+            let next = curr.borrow().get_next();
+            prev = curr;
+            curr = next;
+        }
+
+        if curr.borrow().key == key { //curr.key == key
+            return false
+        }
+        else { //curr.key > key
+            let next_link: ValidLink = Rc::new(RefCell::new(Node::new(value, Some(Rc::clone(&curr)))));
+            prev.borrow_mut().next = Some(next_link); //reset prev
+        }
+        true
+    }
+
     pub fn pop(&mut self) -> i32 {
         let _locked_set = self.lock.lock();
 
@@ -113,13 +130,9 @@ impl LinkedList {
             None => panic!("Nothing left to remove"),
         };
 
-        //first element (to be removed) is curr
         let curr: ValidLink = prev.borrow().get_next();
-        //next is curr.next
         let next: ValidLink = curr.borrow().get_next();
-        //head points to next
         prev.borrow_mut().next = Some(next);
-        //curr points to None
         let popped_value = curr.borrow().value;
         curr.borrow_mut().next = None;
         popped_value
