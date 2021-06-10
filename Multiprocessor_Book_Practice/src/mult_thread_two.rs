@@ -30,10 +30,10 @@ pub fn get_next_link(link: Link) -> Link {
 }
 
 impl Node {
-    pub fn get_next(&self) -> ValidLink { //maybe switch to link?
+    pub fn get_next(&self) -> Link { //maybe switch to link?
         match &self.next {
-            Some(reference) => reference.clone(),
-            None => panic!("There is no next."), //this panics more often than it should, prob when reaches tail
+            Some(reference) => Some(reference.clone()),
+            None => None, //this panics more often than it should, prob when reaches tail
         }
     }
     pub fn new(value: i32, next: Link) -> Self {
@@ -87,12 +87,18 @@ impl LinkedList {
             None => return false,
         };
 
-        let mut curr: ValidLink = prev.lock().unwrap().get_next(); //first element is curr
+        let mut curr: ValidLink = match prev.lock().unwrap().get_next() {
+            Some(reference) => reference,
+            None => return false,
+        }; //first element is curr
 
         while curr.lock().unwrap().value < key { 
             let next = curr.lock().unwrap().get_next();
             prev = curr;
-            curr = next;
+            curr = match next {
+                Some(reference) => reference,
+                None => return false,
+            };
         }
 
         if curr.lock().unwrap().key == key { //curr.key == key
@@ -114,8 +120,14 @@ impl LinkedList {
             None => panic!("Nothing left to remove"),
         };
 
-        let curr: ValidLink = prev.lock().unwrap().get_next();
-        let next: ValidLink = curr.lock().unwrap().get_next();
+        let curr: ValidLink = match prev.lock().unwrap().get_next() {
+            Some(reference) => reference,
+            None => panic!("No tail."),
+        };
+        let next: ValidLink = match curr.lock().unwrap().get_next() {
+            Some(reference) => reference,
+            None => panic!("Only the head and tail are in the list. There is nothing to pop."),
+        };
         prev.lock().unwrap().next = Some(next);
         let popped_value = curr.lock().unwrap().value;
         curr.lock().unwrap().next = None;
@@ -126,23 +138,29 @@ impl LinkedList {
         //let _locked_set = self.lock.lock();
         let key = hash_function(&value);
 
-        //heas is prev
+        //head is prev
         let mut prev: ValidLink = match &self.head {
             Some(reference) => reference.clone(),
             None => panic!("No head in list"),
         };
 
-        let mut curr: ValidLink = prev.lock().unwrap().get_next();
+        let mut curr: ValidLink = match prev.lock().unwrap().get_next() {
+            Some(reference) => reference,
+            None => return false,
+        };
 
         while curr.lock().unwrap().key < key {
             let next = curr.lock().unwrap().get_next();
             prev = curr;
-            curr = next;
+            curr = match next {
+                Some(reference) => reference,
+                None => return false,
+            }
         }
 
         if curr.lock().unwrap().key == key { //if there, remove
             let next = curr.lock().unwrap().get_next();
-            prev.lock().unwrap().next = Some(next);
+            prev.lock().unwrap().next = next;
             curr.lock().unwrap().next = None;
             return true;
         } 
