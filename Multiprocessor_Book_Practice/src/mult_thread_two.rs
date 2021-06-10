@@ -3,6 +3,7 @@
 //https://doc.rust-lang.org/book/ch16-03-shared-state.html#similarities-between-refcelltrct-and-mutextarct
 
 use std::sync::{Mutex, Arc};
+use std::result::Result;
 
 const SET_MIN: i32 = std::i32::MIN;
 const SET_MAX: i32 = std::i32::MAX;
@@ -29,10 +30,10 @@ pub fn get_next_link(link: Link) -> Link {
 }
 
 impl Node {
-    pub fn get_next(&self) -> ValidLink {
+    pub fn get_next(&self) -> ValidLink { //maybe switch to link?
         match &self.next {
             Some(reference) => reference.clone(),
-            None => panic!("There is no next."),
+            None => panic!("There is no next."), //this panics more often than it should, prob when reaches tail
         }
     }
     pub fn new(value: i32, next: Link) -> Self {
@@ -50,7 +51,6 @@ impl Node {
 pub struct LinkedList {
     head: Link,
     current: Link,
-    lock: Mutex<i32>
 }
 
 impl Iterator for LinkedList {
@@ -75,12 +75,11 @@ impl LinkedList {
         Self {
             current: head.clone(),
             head: head,
-            lock: Mutex::new(0), //can remove later?
         }
     }
 
-    pub fn add(&mut self, value: i32) -> bool {
-        let _locked_set = self.lock.lock(); //remove?
+    pub fn add(&self, value: i32) -> bool {
+        //let _locked_set = self.lock.lock(); //remove?
         let key = hash_function(&value);
 
         let mut prev: ValidLink = match &self.head { //head is prev
@@ -106,8 +105,8 @@ impl LinkedList {
         true
     }
 
-    pub fn pop(&mut self) -> i32 {
-        let _locked_set = self.lock.lock();
+    pub fn pop(&self) -> i32 {
+        //let _locked_set = self.lock.lock();
 
         //head is prev
         let prev: ValidLink = match &self.head {
@@ -123,8 +122,8 @@ impl LinkedList {
         popped_value
     }
 
-    pub fn remove(&mut self, value: i32) -> bool {
-        let _locked_set = self.lock.lock();
+    pub fn remove(&self, value: i32) -> bool {
+        //let _locked_set = self.lock.lock();
         let key = hash_function(&value);
 
         //heas is prev
