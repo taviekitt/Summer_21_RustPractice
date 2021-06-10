@@ -111,29 +111,6 @@ impl LinkedList {
         true
     }
 
-    pub fn pop(&self) -> i32 {
-        //let _locked_set = self.lock.lock();
-
-        //head is prev
-        let prev: ValidLink = match &self.head {
-            Some(reference) => reference.clone(),
-            None => panic!("Nothing left to remove"),
-        };
-
-        let curr: ValidLink = match prev.lock().unwrap().get_next() {
-            Some(reference) => reference,
-            None => panic!("No tail."),
-        };
-        let next: ValidLink = match curr.lock().unwrap().get_next() {
-            Some(reference) => reference,
-            None => panic!("Only the head and tail are in the list. There is nothing to pop."),
-        };
-        prev.lock().unwrap().next = Some(next);
-        let popped_value = curr.lock().unwrap().value;
-        curr.lock().unwrap().next = None;
-        popped_value
-    }
-
     pub fn remove(&self, value: i32) -> bool {
         //let _locked_set = self.lock.lock();
         let key = hash_function(&value);

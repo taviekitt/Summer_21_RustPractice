@@ -3,7 +3,7 @@
 //This uses fine grain locking
 //The lib.rs compiles and works for a single threaded program, but I can't call the iterator from main correctly
 
-use Multiprocessor_Book_Practice::mult_thread_two::LinkedList; //NOTE: associated code is NOT in lib.rs
+use Multiprocessor_Book_Practice::mult_thread_list::LinkedList; //NOTE: associated code is NOT in lib.rs
 //use std::iter::Iterator;
 use std::thread;
 use std::time::Duration;

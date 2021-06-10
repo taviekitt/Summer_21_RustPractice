@@ -1,6 +1,8 @@
 //implementation of single thread linked list of integers
-pub mod mult_thread_two;
+pub mod mult_thread_list;
 
+
+//Below holds single-threaded linked list library, with an iterator I can't figure out how to call from main
 
 use std::sync::Mutex;
 use std::cell::RefCell;
