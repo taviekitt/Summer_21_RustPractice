@@ -1,10 +1,8 @@
 //Calls a 16-threaded ordered linked list set for 4 milliseconds
 //All but the last of the print statements are not atomic (prints may be broken up weirdly)
-//This uses fine grain locking
-//The lib.rs compiles and works for a single threaded program, but I can't call the iterator from main correctly
+//Author: Tavie Kittredge
 
-use Multiprocessor_Book_Practice::mult_thread_list::LinkedList; //NOTE: associated code is NOT in lib.rs
-//use std::iter::Iterator;
+use Multiprocessor_Book_Practice::mult_thread_list::LinkedList;
 use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
