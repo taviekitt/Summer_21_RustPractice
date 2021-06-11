@@ -21,8 +21,8 @@ pub struct Node {
     next: Link
 }
 
-pub fn get_next_link(link: Link) -> Link {
-    match &link.unwrap().clone().borrow().next {
+pub fn get_next_link(link: Link) -> Link { //to many clones?
+    match &link.unwrap().borrow().next {
         Some(reference) => Some(reference.clone()),
         None => None,
     }

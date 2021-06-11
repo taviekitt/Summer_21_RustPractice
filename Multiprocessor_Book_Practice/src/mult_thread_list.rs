@@ -3,12 +3,11 @@
 //https://doc.rust-lang.org/book/ch16-03-shared-state.html#similarities-between-refcelltrct-and-mutextarct
 
 use std::sync::{Mutex, Arc};
-use std::result::Result;
 
 const SET_MIN: i32 = std::i32::MIN;
 const SET_MAX: i32 = std::i32::MAX;
 
-type ValidLink = Arc<Mutex<Node>>;
+type ValidLink = Arc<Mutex<Node>>; //switch to rwlock?
 type Link = Option<ValidLink>;
 
 fn hash_function(value: &i32) -> i32{
@@ -78,69 +77,69 @@ impl LinkedList {
         }
     }
 
-    pub fn add(&self, value: i32) -> bool {
-        //let _locked_set = self.lock.lock(); //remove?
+    pub fn walk(&self, value: i32) -> (Link, Link) {
         let key = hash_function(&value);
 
         let mut prev: ValidLink = match &self.head { //head is prev
             Some(reference) => reference.clone(),
-            None => return false,
+            None => return (None, None),
         };
 
-        let mut curr: ValidLink = match prev.lock().unwrap().get_next() {
+        let mut curr: ValidLink = match prev.lock().unwrap().get_next() {//first element first curr
             Some(reference) => reference,
-            None => return false,
+            None => return (None, None),
         }; //first element is curr
 
         while curr.lock().unwrap().value < key { 
             let next = curr.lock().unwrap().get_next();
-            prev = curr;
+            drop(prev);
+            let prev = curr;
             curr = match next {
                 Some(reference) => reference,
-                None => return false,
+                None => return (None, None),
             };
+            drop(next);
         }
+        return (Some(prev), Some(curr));
+    }
 
-        if curr.lock().unwrap().key == key { //curr.key == key
-            return false
+    pub fn add(&self, value: i32) -> bool {
+        let (prev, curr) = self.walk(value);
+        let prev_lock = match prev {
+            Some(prev) => prev.lock(),
+            None => return false,
+        };
+        let curr_lock = match curr {
+            Some(curr) => curr.lock(),
+            None => return false,
+        };
+        if curr_lock.unwrap().value == value { //if value in set
+            return false;
         }
-        else { //curr.key > key
-            let next_link: ValidLink = Arc::new(Mutex::new(Node::new(value, Some(Arc::clone(&curr)))));
-            prev.lock().unwrap().next = Some(next_link); //reset prev
+        else {  //if not, add node
+            let next_link: ValidLink = Arc::new(Mutex::new(Node::new(value, Some(Arc::clone(&curr.unwrap()))))); //couldn't figure out how to use curr_lock. Still safe? Is curr_lock in scope?
+            prev_lock.unwrap().next = Some(next_link);
+            return true;
         }
-        true
     }
 
     pub fn remove(&self, value: i32) -> bool {
-        //let _locked_set = self.lock.lock();
-        let key = hash_function(&value);
-
-        //head is prev
-        let mut prev: ValidLink = match &self.head {
-            Some(reference) => reference.clone(),
-            None => panic!("No head in list"),
+        let (prev, curr) = self.walk(value);
+        let prev_lock = match prev {
+            Some(prev) => prev.lock(),
+            None => return false,
         };
-
-        let mut curr: ValidLink = match prev.lock().unwrap().get_next() {
-            Some(reference) => reference,
+        let curr_lock = match curr {
+            Some (curr) => curr.lock(),
             None => return false,
         };
 
-        while curr.lock().unwrap().key < key {
-            let next = curr.lock().unwrap().get_next();
-            prev = curr;
-            curr = match next {
-                Some(reference) => reference,
-                None => return false,
-            }
-        }
-
-        if curr.lock().unwrap().key == key { //if there, remove
-            let next = curr.lock().unwrap().get_next();
-            prev.lock().unwrap().next = next;
-            curr.lock().unwrap().next = None;
+        if curr_lock.unwrap().value == value { //if value, remove
+            let next = curr_lock.unwrap().get_next();
+            prev_lock.unwrap().next = next;
+            curr_lock.unwrap().next = None;
             return true;
-        } 
+        }
         false
     }
 
